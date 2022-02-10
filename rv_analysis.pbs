@@ -1,0 +1,10 @@
+#!/bin/bash
+#PBS -l select=1:ncpus=16:mem=124gb
+#PBS -l walltime=12:00:00
+#PBS -M andrew.j.jolly@unsw.edu.au
+#PBS -m ae
+#PBS -j oe
+#PBS -o /home/z5345592/output_report.txt
+cd /home/z5345592/scripts
+source ~/.venvs/py37tf/bin/activate
+python3 rv_analysis.py
