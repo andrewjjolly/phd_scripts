@@ -10,20 +10,25 @@ import matplotlib.pyplot as plt
 import os
 import numpy as np
 
-DATA_DIR = '/srv/scratch/astro/z5345592/testing/data/tess_toi'
-RESULTS_DIR = '/srv/scratch/astro/z5345592/testing/results/tess_toi'
+DATA_DIR = '/srv/scratch/astro/z5345592/data/tess_toi/'
+RESULTS_DIR = '/srv/scratch/astro/z5345592/results/tess_toi'
+
+TOI_LIST = ['2221_01'] #added this list so I could run analysis on just a subsection.
 
 def main():
 
     for directory in Path(DATA_DIR).iterdir():
         if directory.is_dir:
             toi_name = directory.name
-            if file_counter(directory, '*ccf*'):
-                make_toi_dir(toi_name)
-                data = create_wobble_data(toi_name)
-                plot_pipeline_rvs(data, toi_name)
-                results = wobble_analysis(data, toi_name)
-                plot_star_rvs(results, toi_name)
+            if not toi_name in TOI_LIST: #this line just checks to see if 
+                continue
+            else:
+                if file_counter(directory, '*ccf*'):
+                    make_toi_dir(toi_name)
+                    data = create_wobble_data(toi_name)
+                    plot_pipeline_rvs(data, toi_name)
+                    results = wobble_analysis(data, toi_name)
+                    plot_star_rvs(results, toi_name)
 
 def make_toi_dir(toi_name):
     path = Path(RESULTS_DIR) / toi_name

@@ -2,12 +2,10 @@ from pathlib import Path
 from astropy.io import fits
 import shutil
 
-TEST_TOI = '4304_01'
 DATA_DIR = Path('/srv/scratch/astro/z5345592/data/data/tess_toi')
-TOI_DIR = DATA_DIR / TEST_TOI
 CALIB_DIR = 'srv/scratch/astro/z5345592/data/data/harps_calibration_files'
 
-for file in TOI_DIR.rglob('*e2ds_A*.fits'):
+for file in DATA_DIR.rglob('*e2ds_A*.fits'):
     sp = fits.open(file)
     wave_file = sp[0].header['HIERARCH ESO DRS CAL TH FILE']
     try:
