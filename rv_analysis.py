@@ -9,11 +9,12 @@ from pathlib import Path
 import matplotlib.pyplot as plt
 import os
 import numpy as np
+from astropy.io import fits
 
 DATA_DIR = '/srv/scratch/astro/z5345592/data/tess_toi/'
 RESULTS_DIR = '/srv/scratch/astro/z5345592/results/tess_toi'
 
-TOI_LIST = ['2221_01'] #added this list so I could run analysis on just a subsection.
+TOI_LIST = ['5094_01'] #added this list so I could run analysis on just a subsection.
 
 def main():
 
@@ -30,6 +31,11 @@ def main():
                     results = wobble_analysis(data, toi_name)
                     plot_star_rvs(results, toi_name)
 
+def check_ccf_science(ccf_file):
+    phdu = fits.open(ccf_file)
+    cat = phdu[0].header['HIERARCH ESO DPR CATG']
+    return cat == 'SCIENCE'
+
 def make_toi_dir(toi_name):
     path = Path(RESULTS_DIR) / toi_name
     if not path.exists():
@@ -43,15 +49,17 @@ def make_toi_dir(toi_name):
     return
 
 def create_wobble_data(toi_name):
+    print('\n')
+    print(f'Creating wobble data object for TOI {toi_name}.')
     data = wobble.Data()
     sp = wobble.Spectrum()
     path = Path(DATA_DIR) / toi_name
-    for ccf_file in path.rglob('*ccf_??_A.fits'):
-        sp.from_HARPS(str(ccf_file), process=False)
-        data.append(sp)
-    print(data.ivars)
-    data.drop_bad_epochs()
-    data.drop_bad_orders()
+    for ccf_file in path.rglob('*ccf_M?_A.fits'):
+        if check_ccf_science(ccf_file):
+            sp.from_HARPS(str(ccf_file), process=False)
+            data.append(sp)
+        # data.drop_bad_epochs()
+        # data.drop_bad_orders()
 
     return data
 
@@ -137,9 +145,7 @@ def calibration_file_check(directory):
 
 
 """
-Periodogram function lines
-
-freq, power = astropy.timeseries.LombScargle(dates[:], rvs[:]).autopower()
+Periodogram function lines2221_01
 period = 1/freq
 plt.plot(period, power)
 plt.xlim([0,10])
