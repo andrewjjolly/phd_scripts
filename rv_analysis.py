@@ -21,7 +21,7 @@ def main():
     for directory in Path(DATA_DIR).iterdir():
         if directory.is_dir:
             toi_name = directory.name
-            if not toi_name in TOI_LIST: #this line just checks to see if 
+            if not toi_name in TOI_LIST: #this line is just for when I am working with a subset of TOIs
                 continue
             else:
                 if file_counter(directory, '*ccf*'):
@@ -30,6 +30,36 @@ def main():
                     plot_pipeline_rvs(data, toi_name)
                     results = wobble_analysis(data, toi_name)
                     plot_star_rvs(results, toi_name)
+
+def file_check(directory): # a function that takes in a directory and returns the ccfs that have matching spectrum files that also have the correct wave calibs
+    
+    ccf_file_list = []
+    wave_file_list = []
+    valid_ccf_files = []
+    obs_id_list = []
+
+    for file in Path(directory).rglob('*_ccf_??_A.fits'):
+        stellar_type = (file.name)[-9:-7]
+        if not any(stellar_type == str for str in ['M2', 'K5', 'G2']): #checks to pick only the ccfs that relate to a stellar observation
+            continue
+        obs_id = file.name[:29] #slicing the HARPS observation ID
+        ccf_file_list.append(str(file)) #making the list of ccfs
+        obs_id_list.append(obs_id) #assigning the observation ID to the list
+
+    for file in Path(directory).rglob('*_wave_A.fits'): #loop through the wave files in the directory
+        wave_file_list.append(str(file.name)) #assign them to a list
+
+    for file in Path(directory).rglob('*_e2ds_A.fits'):
+        phdu = fits.open(file) #primary header data unit of the fits file
+        header = phdu[0].header #the header
+        wave_file = header['HIERARCH ESO DRS CAL TH FILE'] #wave file filename as found in the spectrum file header
+        if wave_file in wave_file_list: #checks to see whether the wave file is in the files in the directory.
+            if (file.name[:29]) in obs_id_list: #checks to make sure that the observation ID for the spectrum matches the observation IDs taken from the ccf.
+                valid_ccf = [str for str in valid_ccf_files if file.name[:29] in str]
+                valid_ccf = valid_ccf[0] #because valid ccf on the line above is a list, but I only need the one.
+                valid_ccf_files.append(valid_ccf)
+
+    return valid_ccf_files
 
 def check_ccf_science(ccf_file):
     phdu = fits.open(ccf_file)
@@ -132,30 +162,6 @@ def file_counter(folder_name, file_string):
         if file.is_file:
             count += 1
     return count
-
-def calibration_file_check(directory):
-    wave_file_string = '*_wave_A*'
-    ccf_file_string = '*_ccf_??_A*'
-    e2ds_file_string = '*_e2ds_*'
-    wave_file_count = file_counter(directory, wave_file_string)
-    ccf_file_count = file_counter(directory, ccf_file_string)
-    e2ds_file_count = file_counter(directory, e2ds_file_string)
-    return wave_file_count == ccf_file_count == e2ds_file_count
-
-
-
-"""
-Periodogram function lines2221_01
-period = 1/freq
-plt.plot(period, power)
-plt.xlim([0,10])
-plt.axvline(x=1.2089819, c='r')
-plt.axvline(x=3.6480957, c='g')
-plt.axvline(x=6.2014698, c='b')
-plt.title('Periodogram for TOI 4017 all observations')
-plt.xlabel('Period')
-plt.ylabel('Periodogram Power')
-"""
     
 if __name__ == '__main__':
     main()
