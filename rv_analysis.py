@@ -24,12 +24,13 @@ def main():
             if not toi_name in TOI_LIST: #this line is just for when I am working with a subset of TOIs
                 continue
             else:
-                if file_counter(directory, '*ccf*'):
-                    make_toi_dir(toi_name)
-                    data = create_wobble_data(toi_name)
-                    plot_pipeline_rvs(data, toi_name)
-                    results = wobble_analysis(data, toi_name)
-                    plot_star_rvs(results, toi_name)
+                if file_counter(directory, '*ccf*'): #if its not zero it evaluates to true
+                    toi_results_dir = make_toi_dir(toi_name)
+                    valid_ccfs = file_check(str(directory))
+                    data = create_wobble_data(toi_name, valid_ccfs)
+                    # plot_pipeline_rvs(data, toi_name)
+                    # results = wobble_analysis(data, toi_name)
+                    # plot_star_rvs(results, toi_name)
 
 def file_check(directory): # a function that takes in a directory and returns the ccfs that have matching spectrum files that also have the correct wave calibs
     
@@ -55,8 +56,8 @@ def file_check(directory): # a function that takes in a directory and returns th
         wave_file = header['HIERARCH ESO DRS CAL TH FILE'] #wave file filename as found in the spectrum file header
         if wave_file in wave_file_list: #checks to see whether the wave file is in the files in the directory.
             if (file.name[:29]) in obs_id_list: #checks to make sure that the observation ID for the spectrum matches the observation IDs taken from the ccf.
-                valid_ccf = [str for str in valid_ccf_files if file.name[:29] in str]
-                valid_ccf = valid_ccf[0] #because valid ccf on the line above is a list, but I only need the one.
+                valid_ccf = [str for str in ccf_file_list if file.name[:29] in str]
+                valid_ccf = valid_ccf[0]
                 valid_ccf_files.append(valid_ccf)
 
     return valid_ccf_files
@@ -76,18 +77,16 @@ def make_toi_dir(toi_name):
         print('\n')
         print(f'Results directory for {toi_name} already exists.')
 
-    return
+    return path
 
-def create_wobble_data(toi_name):
+def create_wobble_data(toi_name, ccf_list):
     print('\n')
     print(f'Creating wobble data object for TOI {toi_name}.')
     data = wobble.Data()
     sp = wobble.Spectrum()
-    path = Path(DATA_DIR) / toi_name
-    for ccf_file in path.rglob('*ccf_M?_A.fits'):
-        if check_ccf_science(ccf_file):
-            sp.from_HARPS(str(ccf_file), process=False)
-            data.append(sp)
+    for ccf_file in ccf_list:
+        sp.from_HARPS(str(ccf_file), process=False)
+        data.append(sp)
         # data.drop_bad_epochs()
         # data.drop_bad_orders()
 
